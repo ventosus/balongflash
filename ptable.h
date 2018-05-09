@@ -1,6 +1,6 @@
 
 
-// структура описания заголовка раздела
+// Struktur Beschreibung Kopfzeile Abschnitt
 #ifndef WIN32
 struct __attribute__ ((__packed__)) pheader {
 #else
@@ -8,39 +8,39 @@ struct __attribute__ ((__packed__)) pheader {
 struct pheader {
 #endif
  int32_t magic;    //   0xa55aaa55
- uint32_t hdsize;   // размер заголовка
+ uint32_t hdsize;   // Größe Kopfzeile
  uint32_t hdversion;
  uint8_t unlock[8];
- uint32_t code;     // тип раздела
- uint32_t psize;    // разме поля данных
+ uint32_t code;     // Geben Sie ein Abschnitt
+ uint32_t psize;    // Raz Ränder von Daten
  uint8_t date[16];
- uint8_t time[16];  // дата-время сборки прошивки
- uint8_t version[32];   // версия пршоивки
- uint16_t crc;   // CRC заголовка
- uint32_t blocksize;  // размер блока CRC образа прошивки
+ uint8_t time[16];  // Datum-die Zeit Montage Firmware
+ uint8_t version[32];   // Version Prhoivki
+ uint16_t crc;   // CRC Kopfzeile
+ uint32_t blocksize;  // Größe Block CRC Bild Firmware
 }; 
 #ifdef WIN32
 #pragma pack(pop)
 #endif
 
 
-// Структура описания таблицы разделов
+// Struktur Beschreibung Tabellen Abschnitte
 
 struct ptb_t{
-  unsigned char pname[20];    // буквенное имя раздела
-  struct pheader hd;  // образ заголовка
-  uint16_t* csumblock; // блок контрольных сумм
-  uint8_t* pimage;   // образ раздела
-  uint32_t offset;   // смещение в файле до начала раздела
-  uint32_t zflag;     // признак сжатого раздела  
-  uint8_t ztype;    // тип сжатия
+  unsigned char pname[20];    // alphabetisch Name Abschnitt
+  struct pheader hd;  // Bild Kopfzeile
+  uint16_t* csumblock; // Block Kontrolle Beträge
+  uint8_t* pimage;   // Bild Abschnitt
+  uint32_t offset;   // Vorurteil in der Datei zu start Abschnitt
+  uint32_t zflag;     // Attribut prägnant Abschnitt  
+  uint8_t ztype;    // Geben Sie ein Komprimierung
 };
 
 //******************************************************
-//*  Внешние массивы для хранения таблицы разделов
+//*  Extern Arrays für die Lagerung Tabellen Abschnitte
 //******************************************************
 extern struct ptb_t ptable[];
-extern int npart; // число разделов в таблице
+extern int npart; // Anzahl von Abschnitte in der Tabelle
 
 extern uint32_t errflag;
 

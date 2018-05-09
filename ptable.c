@@ -1,4 +1,4 @@
-// Процедуры работы с таблицей разделов
+// Verfahren der Arbeit mit dem Tabelle Abschnitte
 
 #include <stdio.h>
 #include <stdint.h>
@@ -20,7 +20,7 @@
 int32_t lzma_decode(uint8_t* inbuf,uint32_t fsize,uint8_t* outbuf);
 
 //******************************************************
-//*  поиск символического имени раздела по его коду
+//*  Suche symbolisch Name Abschnitt auf dem seins Code
 //******************************************************
 
 void  find_pname(unsigned int id,unsigned char* pname) {
@@ -88,12 +88,12 @@ struct {
 for(j=0;pcodes[j].code != 0;j++) {
   if(pcodes[j].code == id) break;
 }
-if (pcodes[j].code != 0) strcpy(pname,pcodes[j].name); // имя найдено - копируем его в структуру
-else sprintf(pname,"U%08x",id); // имя не найдено - подставляем псевдоимя Uxxxxxxxx в тупоконечном формате
+if (pcodes[j].code != 0) strcpy(pname,pcodes[j].name); // Name gefunden - kopieren seins in der Struktur
+else sprintf(pname,"U%08x",id); // Name nicht gefunden - wir ersetzen Pseudoname Uxxxxxxxx in der stumpf formatieren
 }
 
 //*******************************************************************
-// Вычисление размера блока контрольных сумм раздела
+// Berechnung Größe Block Kontrolle Beträge Abschnitt
 //*******************************************************************
 uint32_t crcsize(int n) { 
   return ptable[n].hd.hdsize-sizeof(struct pheader); 
@@ -101,7 +101,7 @@ uint32_t crcsize(int n) {
 }
 
 //*******************************************************************
-// получение размера образа раздела
+// Empfangen Größe Bild Abschnitt
 //*******************************************************************
 uint32_t psize(int n) { 
   return ptable[n].hd.psize; 
@@ -109,53 +109,53 @@ uint32_t psize(int n) {
 }
 
 //*******************************************************
-//*  Вычисление блочной контрольной суммы заголовка
+//*  Berechnung blockieren Kontrolle Summen Kopfzeile
 //*******************************************************
 void calc_hd_crc16(int n) { 
 
-ptable[n].hd.crc=0;   // очищаем старую CRC-сумму
+ptable[n].hd.crc=0;   // klar das Alte CRC-Betrag
 ptable[n].hd.crc=crc16((uint8_t*)&ptable[n].hd,sizeof(struct pheader));   
 }
 
 
 //*******************************************************
-//*  Вычисление блочной контрольной суммы раздела 
+//*  Berechnung blockieren Kontrolle Summen Abschnitt 
 //*******************************************************
 void calc_crc16(int n) {
   
-uint32_t csize; // размер блока сумм в 16-битных словах
-uint16_t* csblock;  // указатель на создаваемый блок
+uint32_t csize; // Größe Block Beträge in der 16-bisschen Wörter
+uint16_t* csblock;  // Wegweiser von erstellt Block
 uint32_t off,len;
 uint32_t i;
-uint32_t blocksize=ptable[n].hd.blocksize; // размер блока, охватываемого суммой
+uint32_t blocksize=ptable[n].hd.blocksize; // Größe Block, von der Betrag
 
-// определяем размер и создаем блок
+// bestimmen Größe und erstellen Block
 csize=psize(n)/blocksize;
-if (psize(n)%blocksize != 0) csize++; // Это если размер образа не кратен blocksize
+if (psize(n)%blocksize != 0) csize++; // Das wenn Größe Bild nicht Charge blocksize
 csblock=(uint16_t*)malloc(csize*2);
 
-// цикл вычисления сумм
+// Zyklus berechnen Beträge
 for (i=0;i<csize;i++) {
- off=i*blocksize; // смещение до текущего блока 
+ off=i*blocksize; // Vorurteil zu aktuell Block 
  len=blocksize;
- if ((ptable[n].hd.psize-off)<blocksize) len=ptable[n].hd.psize-off; // для последнего неполного блока 
+ if ((ptable[n].hd.psize-off)<blocksize) len=ptable[n].hd.psize-off; // für die das letzte unvollständig Block 
  csblock[i]=crc16(ptable[n].pimage+off,len);
 } 
-// вписываем параметры в заголовок
-if (ptable[n].csumblock != 0) free(ptable[n].csumblock); // уничтожаем старый блок, если он был
+// eingeben Parameter in der Beschriftung
+if (ptable[n].csumblock != 0) free(ptable[n].csumblock); // zerstören das Alte Block, wenn er war
 ptable[n].csumblock=csblock;
 ptable[n].hd.hdsize=csize*2+sizeof(struct pheader);
-// перевычисляем CRC заголовка
+// neu berechnen CRC Kopfzeile
 calc_hd_crc16(n);
   
 }
 
 
 //*******************************************************************
-//* Извлечение раздела из файла и добавление его в таблицу разделов
+//* Extraktion Abschnitt von der Datei und Zusatz seins in der Diagramm Abschnitte
 //*
-//  in - входной файл прошивки
-//  Позиция в файле соответствует началу заголовка раздела
+//  in - Eingabe Datei Firmware
+//  Position in der Datei entspricht oben Kopfzeile Abschnitt
 //*******************************************************************
 void extract(FILE* in)  {
 
@@ -167,41 +167,41 @@ long int zlen;
 int res;
 
 ptable[npart].zflag=0; 
-// читаем заголовок в структуру
+// lesen Beschriftung in der Struktur
 ptable[npart].offset=ftell(in);
-fread(&ptable[npart].hd,1,sizeof(struct pheader),in); // заголовок
-//  Ищем символическое имя раздела по таблице 
+fread(&ptable[npart].hd,1,sizeof(struct pheader),in); // Beschriftung
+//  Auf der Suche nach symbolisch Name Abschnitt auf dem Tabelle 
 find_pname(ptable[npart].hd.code,ptable[npart].pname);
 
-// загружаем блок контрольных сумм
-ptable[npart].csumblock=0;  // пока блок не создан
-crcblock=(uint16_t*)malloc(crcsize(npart)); // выделяем временную память под загружаемый блок
+// herunterladen Block Kontrolle Beträge
+ptable[npart].csumblock=0;  // Tschüss Block nicht erstellt
+crcblock=(uint16_t*)malloc(crcsize(npart)); // hervorheben vorübergehend Speicher unter dem herunterladbar Block
 crcblocksize=crcsize(npart);
 fread(crcblock,1,crcblocksize,in);
 
-// загружаем образ раздела
+// herunterladen Bild Abschnitt
 ptable[npart].pimage=(uint8_t*)malloc(psize(npart));
 fread(ptable[npart].pimage,1,psize(npart),in);
 
-// проверяем CRC заголовка
+// überprüfen CRC Kopfzeile
 hcrc=ptable[npart].hd.crc;
-ptable[npart].hd.crc=0;  // старая CRC в рассчете не учитывается
+ptable[npart].hd.crc=0;  // alt CRC in der рассчете nicht wird berücksichtigt
 crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
 if (crc != hcrc) {
-    printf("\n! Раздел %s (%02x) - ошибка контрольной суммы заголовка",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Abschnitt %s (%02x) - Fehler Kontrolle Summen Kopfzeile",ptable[npart].pname,ptable[npart].hd.code>>16);
     errflag=1;
 }  
-ptable[npart].hd.crc=crc;  // восстанавливаем CRC
+ptable[npart].hd.crc=crc;  // wiederherstellen CRC
 
-// вычисляем и проверяем CRC раздела
+// berechnen und überprüfen CRC Abschnitt
 calc_crc16(npart);
 if (crcblocksize != crcsize(npart)) {
-    printf("\n! Раздел %s (%02x) - неправильный размер блока контрольных сумм",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Abschnitt %s (%02x) - falsch Größe Block Kontrolle Beträge",ptable[npart].pname,ptable[npart].hd.code>>16);
     errflag=1;
 }    
   
 else if (memcmp(crcblock,ptable[npart].csumblock,crcblocksize) != 0) {
-    printf("\n! Раздел %s (%02x) - неправильная блочная контрольная сумма",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Abschnitt %s (%02x) - falsch blockieren Kontrolle Betrag",ptable[npart].pname,ptable[npart].hd.code>>16);
     errflag=1;
 }  
   
@@ -209,134 +209,134 @@ free(crcblock);
 
 
 ptable[npart].ztype=' ';
-// Определение zlib-сжатия
+// Definition zlib-Komprimierung
 
 
 if ((*(uint16_t*)ptable[npart].pimage) == 0xda78) {
-  ptable[npart].zflag=ptable[npart].hd.psize;  // сохраняем сжатый размер 
+  ptable[npart].zflag=ptable[npart].hd.psize;  // behalten verdichtet Größe 
   zlen=52428800;
-  zbuf=malloc(zlen);  // буфер в 50М
-  // распаковываем образ раздела
+  zbuf=malloc(zlen);  // Puffer in der 50M
+  // auspacken Bild Abschnitt
   res=uncompress (zbuf, &zlen, ptable[npart].pimage, ptable[npart].hd.psize);
   if (res != Z_OK) {
-    printf("\n! Ошибка распаковки раздела %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Fehler Auspacken Abschnitt %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
     errflag=1;
   }
-  // создаем новый буфер образа раздела и копируем в него рапаковынные данные
+  // erstellen neu Puffer Bild Abschnitt und kopieren in der ihm raubgierig Daten
   free(ptable[npart].pimage);
   ptable[npart].pimage=malloc(zlen);
   memcpy(ptable[npart].pimage,zbuf,zlen);
   ptable[npart].hd.psize=zlen;
   free(zbuf);
-  // перерассчитываем контрольные суммы
+  // wir ordnen um Kontrolle Summen
   calc_crc16(npart);
   ptable[npart].hd.crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
   ptable[npart].ztype='Z';
 }
 
-// Определение lzma-сжатия
+// Definition lzma-Komprimierung
 
 if ((ptable[npart].pimage[0] == 0x5d) && (*(uint64_t*)(ptable[npart].pimage+5) == 0xffffffffffffffff)) {
-  ptable[npart].zflag=ptable[npart].hd.psize;  // сохраняем сжатый размер 
+  ptable[npart].zflag=ptable[npart].hd.psize;  // behalten verdichtet Größe 
   zlen=52428800;
-  zbuf=malloc(zlen);  // буфер в 50М
-  // распаковываем образ раздела
+  zbuf=malloc(zlen);  // Puffer in der 50M
+  // auspacken Bild Abschnitt
   zlen=lzma_decode(ptable[npart].pimage, ptable[npart].hd.psize, zbuf);
   if (zlen>52428800) {
-    printf("\n Превышен размер буфера\n");
+    printf("\n Übertroffen Größe Puffer\n");
     exit(1);
   }  
   if (res == -1) {
-    printf("\n! Ошибка распаковки раздела %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
+    printf("\n! Fehler Auspacken Abschnitt %s (%02x)\n",ptable[npart].pname,ptable[npart].hd.code>>16);
     errflag=1;
   }
-  // создаем новый буфер образа раздела и копируем в него рапаковынные данные
+  // erstellen neu Puffer Bild Abschnitt und kopieren in der ihm raubgierig Daten
   free(ptable[npart].pimage);
   ptable[npart].pimage=malloc(zlen);
   memcpy(ptable[npart].pimage,zbuf,zlen);
   ptable[npart].hd.psize=zlen;
   free(zbuf);
-  // перерассчитываем контрольные суммы
+  // wir ordnen um Kontrolle Summen
   calc_crc16(npart);
   ptable[npart].hd.crc=crc16((uint8_t*)&ptable[npart].hd,sizeof(struct pheader));
   ptable[npart].ztype='L';
 }
   
   
-// продвигаем счетчик разделов
+// fördern Zähler Abschnitte
 npart++;
 
-// отъезжаем, если надо, вперед на границу слова
+// wir fahren weg, wenn brauche, vorwärts von Grenze die Worte
 res=ftell(in);
 if ((res&3) != 0) fseek(in,(res+4)&(~3),SEEK_SET);
 }
 
 
 //*******************************************************
-//*  Поиск разделов в файле прошивки
+//*  Suche Abschnitte in der Datei Firmware
 //* 
-//* возвращает число найденных разделов
+//* kehrt zurück Anzahl von gefunden Abschnitte
 //*******************************************************
 int findparts(FILE* in) {
 
-// буфер префикса BIN-файла
+// Puffer das Präfix BIN-Datei
 uint8_t prefix[0x5c];
 int32_t signsize;
 int32_t hd_dload_id;
 
-// Маркер начала заголовка раздела	      
+// Markierung start Kopfzeile Abschnitt	      
 const unsigned int dpattern=0xa55aaa55;
 unsigned int i;
 
 
-// поиск начала цепочки разделов в файле
+// Suche start Gespräche Abschnitte in der Datei
 while (fread(&i,1,4,in) == 4) {
   if (i == dpattern) break;
 }
 if (feof(in)) {
-  printf("\n В файле не найдены разделы - файл не содержит образа прошивки\n");
+  printf("\n In der Datei nicht gefunden Abschnitte - Datei nicht enthält Bild Firmware\n");
   exit(0);
 }  
 
-// текущая позиция в файле должна быть не ближе 0x60 от начала - размер заголовка всего файла
+// aktuell Position in der Datei sollte zu sein nicht näher 0x60 aus start - Größe Kopfzeile insgesamt Datei
 if (ftell(in)<0x60) {
-    printf("\n Заголовок файла имеет неправильный размер\n");
+    printf("\n Kopfzeile Datei hat a falsch Größe\n");
     exit(0);
 }    
-fseek(in,-0x60,SEEK_CUR); // отъезжаем на начало BIN-файла
+fseek(in,-0x60,SEEK_CUR); // wir fahren weg von Zuhause BIN-Datei
 
-// вынимаем префикс
+// herausnehmen Präfix
 fread(prefix,0x5c,1,in);
 hd_dload_id=*((uint32_t*)&prefix[0]);
-// если принудительно dload_id не установлен - выбираем его из заголовка
+// wenn gewaltsam dload_id nicht installiert - wählen Sie seins von der Kopfzeile
 if (dload_id == -1) dload_id=hd_dload_id;
 if (dload_id > 0xf) {
-  printf("\n Неверный код типа прошивки (dload_id) в заголовке - %x",dload_id);
+  printf("\n Ungültig Code eingeben Firmware (dload_id) in der Titel - %x",dload_id);
   exit(0);
 }  
-printf("\n Код файла прошивки: %x (%s)\n",hd_dload_id,fw_description(hd_dload_id));
+printf("\n Code Datei Firmware: %x (%s)\n",hd_dload_id,fw_description(hd_dload_id));
 
-// поиск остальных разделов
+// Suche übrig Abschnitte
 
 do {
-  printf("\r Поиск раздела # %i",npart); fflush(stdout);	
-  if (fread(&i,1,4,in) != 4) break; // конец файла
-  if (i != dpattern) break;         // образец не найден - конец цепочки разделов
-  fseek(in,-4,SEEK_CUR);            // отъезжаем назад, на начало заголовка
-  extract(in);                      // извлекаем раздел
+  printf("\r Suche Abschnitt # %i",npart); fflush(stdout);	
+  if (fread(&i,1,4,in) != 4) break; // das Ende Datei
+  if (i != dpattern) break;         // Muster nicht gefunden - das Ende Gespräche Abschnitte
+  fseek(in,-4,SEEK_CUR);            // wir fahren weg zurück, von Zuhause Kopfzeile
+  extract(in);                      // extrahieren Abschnitt
 } while(1);
 printf("\r                                 \r");
 
-// ищем цифровую подпись
+// auf der Suche nach digital Unterschrift
 signsize=serach_sign();
-if (signsize == -1) printf("\n Цифровая подпись: не найдена");
+if (signsize == -1) printf("\n Digital Unterschrift: nicht gefunden");
 else {
-  printf("\n Цифровая подпись: %i байт",signsize);
-  printf("\n Хеш открытого ключа: %s",signver_hash);
+  printf("\n Digital Unterschrift: %i Bytes",signsize);
+  printf("\n Ja öffnen Schlüssel: %s",signver_hash);
 }
 if (((signsize == -1) && (dload_id>7)) ||
     ((signsize != -1) && (dload_id<8))) 
-    printf("\n ! ВНИМАНИЕ: Наличие цифровой подписи не соответствует коду типа прошивки: %02x",dload_id);
+    printf("\n ! ACHTUNG: Verfügbarkeit digital Signaturen nicht entspricht Code eingeben Firmware: %02x",dload_id);
 
 
 return npart;
@@ -344,32 +344,32 @@ return npart;
 
 
 //*******************************************************
-//* Поиск разделов в многофайловом режиме
+//* Suche Abschnitte in der Multi-Datei Modus
 //*******************************************************
 void findfiles (char* fdir) {
 
 char filename[200];  
 FILE* in;
   
-printf("\n Поиск файлов-образов разделов...\n\n ##   Размер      ID        Имя          Файл\n-----------------------------------------------------------------\n");
+printf("\n Suche Dateien-Bilder Abschnitte...\n\n ##   Größe      ID        Name          Datei\n-----------------------------------------------------------------\n");
 
 for (npart=0;npart<30;npart++) {
-    if (find_file(npart, fdir, filename, &ptable[npart].hd.code, &ptable[npart].hd.psize) == 0) break; // конец поиска - раздела с таким ID не нашли
-    // получаем символическое имя раздела
+    if (find_file(npart, fdir, filename, &ptable[npart].hd.code, &ptable[npart].hd.psize) == 0) break; // das Ende Suchmaschine - Abschnitt mit dem so ein ID nicht habe gefunden
+    // wir bekommen symbolisch Name Abschnitt
     find_pname(ptable[npart].hd.code,ptable[npart].pname);
     printf("\n %02i  %8i  %08x  %-14.14s  %s",npart,ptable[npart].hd.psize,ptable[npart].hd.code,ptable[npart].pname,filename);fflush(stdout);
     
-    // распределяем память под образ раздела
+    // verteilen Speicher unter dem Bild Abschnitt
     ptable[npart].pimage=malloc(ptable[npart].hd.psize);
     if (ptable[npart].pimage == 0) {
-      printf("\n! Ошибка распределения памяти, раздел #%i, размер = %i байт\n",npart,ptable[npart].hd.psize);
+      printf("\n! Fehler Zuteilung von Speicher, Abschnitt #%i, Größe = %i Bytes\n",npart,ptable[npart].hd.psize);
       exit(0);
     }
     
-    // читаем образ в буфер
+    // lesen Bild in der Puffer
     in=fopen(filename,"r");
     if (in == 0) {
-      printf("\n Ошибка открытия файла %s",filename);
+      printf("\n Fehler Entdeckungen Datei %s",filename);
       return;
     } 
     fread(ptable[npart].pimage,ptable[npart].hd.psize,1,in);
@@ -377,7 +377,7 @@ for (npart=0;npart<30;npart++) {
       
 }
 if (npart == 0) {
- printf("\n! Не найдено ни одного файла с образом раздела в каталоге %s",fdir);
+ printf("\n! Nicht gefunden uns eins Datei mit dem Art und Weise Abschnitt in der Verzeichnis %s",fdir);
  exit(0);
 } 
 }

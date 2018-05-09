@@ -27,29 +27,29 @@
 
 
 //***************************************************
-//* Хранилище кода ошибки
+//* Lagerung der Code Fehler
 //***************************************************
 int errcode;
 
 
 //***************************************************
-//* Вывод кода ошибки команды
+//* Fazit der Code Fehler Teams
 //***************************************************
 void printerr() {
   
-if (errcode == -1) printf(" - таймаут команды\n");
-else printf(" - код ошибки %02x\n",errcode);
+if (errcode == -1) printf(" - Zeitüberschreitung Teams\n");
+else printf(" - Code Fehler %02x\n",errcode);
 }
 
 //***************************************************
-// Отправка команды начала раздела
+// Senden Teams start Abschnitt
 // 
-//  code - 32-битный код раздела
-//  size - полный размер записываемого раздела
+//  code - 32-bisschen Code Abschnitt
+//  size - fertig Größe beschreibbar Abschnitt
 // 
-//*  результат:
-//  false - ошибка
-//  true - команда принята модемом
+//*  Wirkung:
+//  false - Fehler
+//  true - Befehl angenommen Modem
 //***************************************************
 int dload_start(uint32_t code,uint32_t size) {
 
@@ -84,14 +84,14 @@ else return true;
 }  
 
 //***************************************************
-// Отправка блока раздела
+// Senden Block Abschnitt
 // 
-//  blk - # блока
-//  pimage - адрес начала образа раздела в памяти
+//  blk - # Block
+//  pimage - Adresse start Bild Abschnitt in der Speicher
 // 
-//*  результат:
-//  false - ошибка
-//  true - команда принята модемом
+//*  Wirkung:
+//  false - Fehler
+//  true - Befehl angenommen Modem
 //***************************************************
 int dload_block(uint32_t part, uint32_t blk, uint8_t* pimage) {
 
@@ -113,20 +113,20 @@ static struct {
 #pragma pack(pop)
 #endif
 
-blksize=fblock; // начальное значение размера блока
-res=ptable[part].hd.psize-blk*fblock;  // размер оставшегося куска до конца файла
-if (res<fblock) blksize=res;  // корректируем размер последнего блока
+blksize=fblock; // primär Bedeutung Größe Block
+res=ptable[part].hd.psize-blk*fblock;  // Größe übrig Stück zu das Ende Datei
+if (res<fblock) blksize=res;  // richtig Größe das letzte Block
 
-// код команды
+// Code Teams
 cmd_dload_block.cmd=0x42;
-// номер блока
+// Nummer Block
 cmd_dload_block.blk=htonl(blk+1);
-// размер блока
+// Größe Block
 cmd_dload_block.bsize=htons(blksize);
-// порция данных из образа раздела
+// Teil von Daten von der Bild Abschnitt
 memcpy(cmd_dload_block.data,pimage+blk*fblock,blksize);
-// отсылаем блок в модем
-iolen=send_cmd((uint8_t*)&cmd_dload_block,sizeof(cmd_dload_block)-fblock+blksize,replybuf); // отсылаем команду
+// senden Block in der Modem
+iolen=send_cmd((uint8_t*)&cmd_dload_block,sizeof(cmd_dload_block)-fblock+blksize,replybuf); // senden Befehl
 
 errcode=replybuf[3];
 if ((iolen == 0) || (replybuf[1] != 2))  {
@@ -138,14 +138,14 @@ return true;
 
   
 //***************************************************
-// Завершение записи раздела
+// Fertigstellung Aufzeichnungen Abschnitt
 // 
-//  code - код раздела
-//  size - размер раздела
+//  code - Code Abschnitt
+//  size - Größe Abschnitt
 // 
-//*  результат:
-//  false - ошибка
-//  true - команда принята модемом
+//*  Wirkung:
+//  false - Fehler
+//  true - Befehl angenommen Modem
 //***************************************************
 int dload_end(uint32_t code, uint32_t size) {
 
@@ -184,44 +184,44 @@ return true;
 
 
 //***************************************************
-//* Запись в модем всех разделов из таблицы
+//* Aufnahme in der Modem von allen Abschnitte von der Tabellen
 //***************************************************
 void flash_all() {
 
 int32_t part;
 uint32_t blk,maxblock;
 
-printf("\n##  ---- Имя раздела ---- записано");
-// Главный цикл записи разделов
+printf("\n##  ---- Name Abschnitt ---- aufgezeichnet");
+// Haupt Zyklus Aufzeichnungen Abschnitte
 for(part=0;part<npart;part++) {
 printf("\n");  
 //  printf("\n02i %s)",part,ptable[part].pname);
- // команда начала раздела
+ // Befehl start Abschnitt
  if (!dload_start(ptable[part].hd.code,ptable[part].hd.psize)) {
-   printf("\r! Отвергнут заголовок раздела %i (%s)",part,ptable[part].pname);
+   printf("\r! Abgelehnt Beschriftung Abschnitt %i (%s)",part,ptable[part].pname);
    printerr();
    exit(-2);
  }  
     
- maxblock=(ptable[part].hd.psize+(fblock-1))/fblock; // число блоков в разделе
- // Поблочный цикл передачи образа раздела
+ maxblock=(ptable[part].hd.psize+(fblock-1))/fblock; // Anzahl von Blöcke in der Abschnitt
+ // Blockieren Zyklus Übertragung von Bild Abschnitt
  for(blk=0;blk<maxblock;blk++) {
-  // Вывод процента записанного
+  // Fazit Prozent aufgezeichnet
   printf("\r%02i  %-20s  %i%%",part,ptable[part].pname,(blk+1)*100/maxblock); 
 
-    // Отсылаем очередной блок
+    // Wir senden regelmäßig Block
   if (!dload_block(part,blk,ptable[part].pimage)) {
-   printf("\n! Отвергнут блок %i раздела %i (%s)",blk,part,ptable[part].pname);
+   printf("\n! Abgelehnt Block %i Abschnitt %i (%s)",blk,part,ptable[part].pname);
    printerr();
    exit(-2);
   }  
  }    
 
-// закрываем раздел
+// schließen Abschnitt
  if (!dload_end(ptable[part].hd.code,ptable[part].hd.psize)) {
-   printf("\n! Ошибка закрытия раздела %i (%s)",part,ptable[part].pname);
+   printf("\n! Fehler Schließen Abschnitt %i (%s)",part,ptable[part].pname);
    printerr();
    exit(-2);
  }  
-} // конец цикла по разделам
+} // das Ende Zyklus auf dem Abschnitte
 }

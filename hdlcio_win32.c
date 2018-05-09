@@ -1,4 +1,4 @@
-//  Низкоуровневые процедуры работы с последовательным портом и HDLC
+//  Low-Level Verfahren der Arbeit mit dem konsistent Hafen und HDLC
 
 #include <stdio.h>
 #include <windows.h>
@@ -13,14 +13,14 @@ unsigned int nand_cmd=0x1b400000;
 unsigned int spp=0;
 unsigned int pagesize=0;
 unsigned int sectorsize=512;
-unsigned int maxblock=0;     // Общее число блоков флешки
+unsigned int maxblock=0;     // Allgemeine Informationen Anzahl von Blöcke флешки
 char flash_mfr[30]={0};
 char flash_descr[30]={0};
 unsigned int oobsize=0;
 
-static char pdev[500]; // имя последовательного порта
+static char pdev[500]; // Name konsistent der Hafen
 
-int siofd; // fd для работы с Последовательным портом
+int siofd; // fd für die der Arbeit mit dem Konsequent Hafen
 static HANDLE hSerial;
 
 static int read(int siofd, void* buf, unsigned int len)
@@ -42,25 +42,25 @@ static int write(int siofd, void* buf, unsigned int len)
 }
 
 //*************************************************
-//*    отсылка буфера в модем
+//*    Referenz Puffer in der Modem
 //*************************************************
 unsigned int send_unframed_buf(char* outcmdbuf, unsigned int outlen) {
 
 
 PurgeComm(hSerial, PURGE_RXCLEAR);
 
-write(siofd,"\x7e",1);  // отсылаем префикс
+write(siofd,"\x7e",1);  // senden Präfix
 
-if (write(siofd,outcmdbuf,outlen) == 0) {   printf("\n Ошибка записи команды");return 0;  }
+if (write(siofd,outcmdbuf,outlen) == 0) {   printf("\n Fehler Aufzeichnungen Teams");return 0;  }
 FlushFileBuffers(hSerial);
 
 return 1;
 }
 
 //******************************************************************************************
-//* Прием буфера с ответом из модема
+//* Empfang Puffer mit dem antworte von der Modem
 //*
-//*  masslen - число байтов, принимаемых единым блоком без анализа признака конца 7F
+//*  masslen - Anzahl von Bytes, von der vereinheitlicht blockieren ohne Analyse Funktion das Ende 7F
 //******************************************************************************************
 
 unsigned int receive_reply(char* iobuf, int masslen) {
@@ -72,36 +72,36 @@ unsigned char replybuf[14000];
 
 incount=0;
 if (read(siofd,&c,1) != 1) {
-//  printf("\n Нет ответа от модема");
-  return 0; // модем не ответил или ответил неправильно
+//  printf("\n Nein antworte aus Modem");
+  return 0; // Modem nicht beantwortet oder beantwortet falsch
 }
 //if (c != 0x7e) {
-//  printf("\n Первый байт ответа - не 7e: %02x",c);
-//  return 0; // модем не ответил или ответил неправильно
+//  printf("\n Der erste Bytes antworte - nicht 7e: %02x",c);
+//  return 0; // Modem nicht beantwortet oder beantwortet falsch
 //}
 replybuf[incount++]=c;
 
-// чтение массива данных единым блоком при обработке команды 03
+// lesen Array von Daten vereinheitlicht blockieren an Verarbeitung Teams 03
 if (masslen != 0) {
  res=read(siofd,replybuf+1,masslen-1);
  if (res != (masslen-1)) {
-   printf("\nСлишком короткий ответ от модема: %i байт, ожидалось %i байт\n",res+1,masslen);
+   printf("\nZu viel kurz antworte aus Modem: %i Bytes, wurde erwartet %i Bytes\n",res+1,masslen);
    dump(replybuf,res+1,0);
    return 0;
  }  
- incount+=masslen-1; // у нас в буфере уже есть masslen байт
+ incount+=masslen-1; // an uns in der Puffer schon da ist masslen Bytes
 // printf("\n ------ it mass --------");
 // dump(replybuf,incount,0);
 }
 
-// принимаем оставшийся хвост буфера
+// akzeptieren übrig Schwanz Puffer
 while (read(siofd,&c,1) == 1)  {
  replybuf[incount++]=c;
 // printf("\n-- %02x",c);
  if (c == 0x7e) break;
 }
 
-// Преобразование принятого буфера для удаления ESC-знаков
+// Transformation angenommen Puffer für die löschen ESC-Zeichen
 escflag=0;
 iolen=0;
 for (i=0;i<incount;i++) { 
@@ -125,7 +125,7 @@ return iolen;
 }
 
 //***********************************************************
-//* Преобразование командного буфера с Escape-подстановкой
+//* Transformation Befehl Puffer mit dem Escape-Substitution
 //***********************************************************
 unsigned int convert_cmdbuf(char* incmdbuf, int blen, char* outcmdbuf) {
 
@@ -134,13 +134,13 @@ unsigned char cmdbuf[14096];
 
 bcnt=blen;
 memcpy(cmdbuf,incmdbuf,blen);
-// Вписываем CRC в конец буфера
+// Wir treten ein CRC in der das Ende Puffer
 *((unsigned short*)(cmdbuf+bcnt))=crc16(cmdbuf,bcnt);
 bcnt+=2;
 
-// Пребразование данных с экранированием ESC-последовательностей
+// Bildung von Daten mit dem Screening ESC-Sequenzen
 iolen=0;
-outcmdbuf[iolen++]=cmdbuf[0];  // первый байт копируем без модификаций
+outcmdbuf[iolen++]=cmdbuf[0];  // der erste Bytes kopieren ohne Änderungen
 for(i=1;i<bcnt;i++) {
    switch (cmdbuf[i]) {
      case 0x7e:
@@ -157,13 +157,13 @@ for(i=1;i<bcnt;i++) {
        outcmdbuf[iolen++]=cmdbuf[i];
    }
  }
-outcmdbuf[iolen++]=0x7e; // завершающий байт
+outcmdbuf[iolen++]=0x7e; // Finale Bytes
 outcmdbuf[iolen]=0;
 return iolen;
 }
 
 //***************************************************
-//*  Отсылка команды в порт и получение результата  *
+//*  Senden Teams in der Hafen und Empfangen Ergebnis  *
 //***************************************************
 int send_cmd(unsigned char* incmdbuf, int blen, unsigned char* iobuf) {
   
@@ -171,7 +171,7 @@ unsigned char outcmdbuf[14096];
 unsigned int  iolen;
 
 iolen=convert_cmdbuf(incmdbuf,blen,outcmdbuf);  
-if (!send_unframed_buf(outcmdbuf,iolen)) return 0; // ошибка передачи команды
+if (!send_unframed_buf(outcmdbuf,iolen)) return 0; // Fehler Übertragung von Teams
 return receive_reply(iobuf,0);
 }
 
@@ -239,7 +239,7 @@ static int find_port(int* port_no, char* port_name)
 }
 
 //***************************************************
-// Открытие и настройка последовательного порта
+// Eröffnung und tunen konsistent der Hafen
 //***************************************************
 
 int open_port(char* devname) {
@@ -253,19 +253,19 @@ char port_name[256];
 
 if (*devname == '\0')
 {
-  printf("\n\nПоиск прошивочного порта...\n");
+  printf("\n\nSuche Nähen der Hafen...\n");
   
   if (find_port(&port_no, port_name) == 0)
   {
     sprintf(devname, "%d", port_no);
-    printf("Порт: \"%s\"\n", port_name);
+    printf("Hafen: \"%s\"\n", port_name);
   }
   else
   {
-    printf("Порт не обнаружен!\n");
+    printf("Hafen nicht erkannt!\n");
     exit(0); 
   }
-    //printf("\n! - Последовательный порт не задан\n"); 
+    //printf("\n! - Seriell Hafen nicht gegeben\n"); 
     //exit(0); 
 }
 
@@ -274,7 +274,7 @@ strcat(device, devname);
 hSerial = CreateFileA(device, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 if (hSerial == INVALID_HANDLE_VALUE)
 {
-   printf("\n! - Последовательный порт COM%s не открывается\n", devname); 
+   printf("\n! - Seriell Hafen COM%s nicht öffnet sich\n", devname); 
    exit(0); 
 }
 
@@ -290,7 +290,7 @@ dcbSerialParams.fRtsControl = RTS_CONTROL_ENABLE;
 if (!SetCommState(hSerial, &dcbSerialParams))
 {
     CloseHandle(hSerial);
-    printf("\n! - Ошибка при инициализации COM-порта\n"); 
+    printf("\n! - Fehler an Initialisierung COM-der Hafen\n"); 
     exit(0); 
     //return -1;
 }
@@ -303,7 +303,7 @@ CommTimeouts.WriteTotalTimeoutMultiplier = 0;
 if (!SetCommTimeouts(hSerial, &CommTimeouts))
 {
     CloseHandle(hSerial);
-    printf("\n! - Ошибка при инициализации COM-порта\n"); 
+    printf("\n! - Fehler an Initialisierung COM-der Hafen\n"); 
     exit(0); 
 }
 
@@ -314,21 +314,21 @@ return 1;
 
 
 //*************************************
-// Настройка времени ожидания порта
+// Anpassen Zeit Erwartung der Hafen
 //*************************************
 
 void port_timeout(int timeout) {
 }
 
 //*************************************************
-//*  Поиск файла по номеру в указанном каталоге
+//*  Suche Datei auf dem die Nummer in der die Verzeichnis
 //*
-//* num - # файла
-//* filename - буфер для полного имени файла
-//* id - переменная, в которую будет записан идентификатор раздела
+//* num - # Datei
+//* filename - Puffer für die voll Name Datei
+//* id - variabel, in der welche wird sein aufgezeichnet Kennung Abschnitt
 //*
-//* return 0 - не найдено
-//*        1 - найдено
+//* return 0 - nicht gefunden
+//*        1 - gefunden
 //*************************************************
 int find_file(int num, char* dirname, char* filename,unsigned int* id, unsigned int* size) {
 
@@ -353,33 +353,33 @@ strcat(filename, "\\");
 strcat(filename, fname);  
 
 // 00-00000200-M3Boot.bin
-//проверяем имя файла на наличие знаков '-'
+//überprüfen Name Datei von Verfügbarkeit Zeichen '-'
 if (fname[2] != '-' || fname[11] != '-') {
-  printf("\n Неправильный формат имени файла - %s\n",fname);
+  printf("\n Falsch formatieren Name Datei - %s\n",fname);
   exit(1);
 }
 
-// проверяем цифровое поле ID раздела
+// überprüfen digital Feld ID Abschnitt
 if (strspn(fname+3,"0123456789AaBbCcDdEeFf") != 8) {
-  printf("\n Ошибка в идентификаторе раздела - нецифровой знак - %s\n",filename);
+  printf("\n Fehler in der Kennung Abschnitt - nicht numerisch Zeichen - %s\n",filename);
   exit(1);
 }  
 sscanf(fname+3,"%8x",id);
 
-// Проверяем доступность и читаемость файла
+// Überprüfung Zugänglichkeit und Lesbarkeit Datei
 in=fopen(filename,"rb");
 if (in == 0) {
-  printf("\n Ошибка открытия файла %s\n",filename);
+  printf("\n Fehler Entdeckungen Datei %s\n",filename);
   exit(1);
 }
 if (fread(&pt,1,4,in) != 4) {
-  printf("\n Ошибка чтения файла %s\n",filename);
+  printf("\n Fehler Lesungen Datei %s\n",filename);
   exit(1);
 }
   
-// проверяем, что файл - сырой образ, без заголовка
+// überprüfen, das Datei - ungekocht Bild, ohne Kopfzeile
 if (pt == 0xa55aaa55) {
-  printf("\n Файл %s имеет заголовок - для прошивки не подходит\n",filename);
+  printf("\n Datei %s hat a Beschriftung - für die Firmware nicht ist geeignet\n",filename);
   exit(1);
 }
 
@@ -392,12 +392,12 @@ return 1;
 }
 
 //****************************************************
-//*  Отсылка модему АТ-команды
+//*  Senden Modem AT-Teams
 //*  
-//* cmd - буфер с командой
-//* rbuf - буфер для записи ответа
+//* cmd - Puffer mit dem Mannschaft
+//* rbuf - Puffer für die Aufzeichnungen antworte
 //*
-//* Возвращает длину ответа
+//* Rückkehr lang antworte
 //****************************************************
 int atcmd(char* cmd, char* rbuf) {
 
@@ -409,14 +409,14 @@ strcat(cbuf,cmd);
 strcat(cbuf,"\r");
 
 port_timeout(100);
-// Вычищаем буфер приемника и передатчика
+// Wir reinigen Puffer Empfänger und Sender
 PurgeComm(hSerial, PURGE_RXCLEAR);
 
-// отправка команды
+// Versand Teams
 write(siofd,cbuf,strlen(cbuf));
 Sleep(100);
 
-// чтение результата
+// lesen Ergebnis
 res=read(siofd,rbuf,200);
 return res;
 }

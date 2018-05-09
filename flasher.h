@@ -1,4 +1,4 @@
-// размер блока данных, передаваемый модему за одну команду
+// Größe Block von Daten, übertragen Modem für eins Befehl
 #define fblock 4096
 //#define fblock 2048
 
